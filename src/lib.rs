@@ -1,7 +1,5 @@
-extern crate serde;
-extern crate serde_qs as qs;
-
-mod client;
-pub mod ws_model;
-pub mod rest_model;
-pub mod config;
+//pub mod websocket;
+//pub mod error;
+pub mod exchange;
+//pub mod Exchanges;
+pub mod load_config;
