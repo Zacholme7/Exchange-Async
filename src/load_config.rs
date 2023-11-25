@@ -36,4 +36,10 @@ pub fn load_config<P: AsRef<Path>>(path: P) -> Result<ExchangeConfig, Box<dyn st
         Ok(config)
 }
 
+/// Represents the exchanges that we have added
+pub enum Exchanges {
+        Binance,
+        //Poloniex,
+}
+
 

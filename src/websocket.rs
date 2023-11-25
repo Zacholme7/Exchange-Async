@@ -7,16 +7,7 @@ use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::{connect_async, MaybeTlsStream};
 use url::Url;
-
 use crate::error::*;
-
-/// Websocket endpoint
-pub static WS_ENDPOINT: &str = "ws";
-
-/// Construct the aggregated stream endpoint
-pub fn agg_trade_stream(symbol: &str) -> String {
-    format!("{symbol}@aggTrade")
-}
 
 /// Websocket struct representing a connection to an exchange
 pub struct WebSockets<'a, WE> {
@@ -26,7 +17,6 @@ pub struct WebSockets<'a, WE> {
     handler: Box<dyn FnMut(WE) -> Result<()> + 'a + Send>,
     /// Websocket url
     ws_endpoint: &'a str,
-
 }
 
 impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {

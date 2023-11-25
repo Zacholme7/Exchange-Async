@@ -1,36 +1,55 @@
-//use crate::websocket::WebSockets;
-//use crate::error::*;
-use crate::load_config::ExchangeInformation;
+use crate::load_config::{ExchangeInformation, Exchanges};
+use crate::Exchanges::Binance::behavior::BinanceBehavior;
+//use crate::Exchanges::Poloniex::behavior::PoloniexBehavior;
+use async_trait::async_trait;
 
-/// Structure representing an exchange
-pub struct Exchange {
-    /// Configuration information about the exchange
-    pub exchange_information: ExchangeInformation,
+/// Common trait that all exchanges should implement
+/// Defines the processing behavior for the specific exchange
+#[async_trait]
+pub trait ExchangeBehavior {
+    /// Start the stream for every endpoint that we would like to connect to 
+    async fn start_stream(&self, exchange_information: &ExchangeInformation) {
+        // From the config, get what endpoints we should connect to
+        let connections = &exchange_information.connections;
+
+        // Connect to the trade endpoint
+        if connections.trade {
+            tokio::spawn(
+                self.stream_trade()
+            );
+        }
+
+        // Connect to the orderbook stream
+        if connections.orderbook {
+            self.stream_orderbook();
+        }
+    }
+    /// Connect to a trade stream
+    fn stream_trade(&self);
+    /// Connect to the orderbook stream
+    fn stream_orderbook(&self);
 }
 
-impl Exchange {
-    pub fn new(exchange_information: ExchangeInformation) -> Self {
+/// Structure representing an exchange
+pub struct Exchange<'a> {
+    /// Configuration information about the exchange
+    pub exchange_information: &'a ExchangeInformation,
+    pub behavior: Box<dyn ExchangeBehavior>
+}
+
+impl<'a> Exchange<'a> {
+    /// Constructor for an exchange
+    pub fn new(exchange_information: &'a ExchangeInformation, exchange_type: Exchanges) -> Self {
+        // Retrieve the correct behavior for the exchange
+        let behavior: Box<dyn ExchangeBehavior> = match exchange_type {
+            Exchanges::Binance => Box::new(BinanceBehavior),
+            //Exchanges::Poloniex => Box::new(PoloniexBehavior),
+        };
+
+        // Construct the instance
         Self {
-            exchange_information
+            exchange_information,
+            behavior
         }
     }
 }
-
-/* 
-impl<'a, WE: serde::de::DeserializeOwned> Exchange<'a, WE> {
-
-    pub fn new<Callback>(
-    ) -> Exchange<'a, WE> 
-    where
-        Callback: FnMut(WE) -> Result<()> + 'a + Send,
-    {
-        Exchange {
-            rest_url: rest_url,
-            websocket_url: websocket_url,
-            public_key: public_key,
-            private_key: private_key,
-            websocket: WebSockets::new(callback, websocket_url),
-        }
-    } 
-}
-*/

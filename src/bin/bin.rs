@@ -1,5 +1,6 @@
-use exchange_async::load_config::load_config;
+use exchange_async::load_config::{load_config, Exchanges};
 use exchange_async::exchange::Exchange;
+
 use tokio;
 
 
@@ -10,11 +11,17 @@ async fn main() {
 
     // vector that will hold the exchanges
     let exchanges: Vec<Exchange> = vec![
-        Exchange::new(config.binance),
-        Exchange::new(config.poloniex)
+        Exchange::new(&config.binance, Exchanges::Binance),
+        //Exchange::new(config.poloniex, Exchanges::Poloniex)
     ];
 
     for exchange in exchanges {
+        /* 
+        tokio::spawn(async move {
+            exchange.behavior.start_stream(&config.binance).await;
+        });
+        */
+        //exchange.behavior.start_stream();
         // start each of these in their own thread????
         // something liek std::thread(exchange.start_stream())
         // start stream will then call tokio::spawn
