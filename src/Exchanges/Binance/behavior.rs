@@ -6,36 +6,61 @@ use crate::ws_model::WebsocketEvent;
 use crate::websocket::WebSockets;
 use async_trait::async_trait;
 
+/// The websocket url
+static WS_URL: &str = "wss://stream.binance.com:9443/";
+
+pub fn construct_trade_stream(symbols: &Vec<String>) -> String {
+    let stream_names: Vec<String> = symbols
+        .iter()
+        .map(|symbol| format!("{}@trade", symbol))
+        .collect();
+
+    // Join the stream names with '/'
+    let stream_names_combined = stream_names.join("/");
+
+    // Construct the full WebSocket URL
+    format!("{}stream?streams={}", WS_URL, stream_names_combined)
+}
+
 pub struct BinanceBehavior;
 
 #[async_trait]
 impl ExchangeBehavior for BinanceBehavior {
     /// Start the stream for every endpoint that we would like to connec tto
     async fn start_stream(&self, exchange_information: &ExchangeInformation, symbol: String) {
+    
         // streams that we want to connect to
         let connections = &exchange_information.connections;
         let symbol = Arc::new(symbol);
 
+
         // should we connect to the trade stream
-        if connections.trade {
-            tokio::spawn(BinanceBehavior::stream_trade(symbol.clone()));
+        if connections.trade.should_connect {
+            // construct the url
+
+            let url = construct_trade_stream(&connections.trade.symbols);
+            println!("{:?}", url);
+
+            tokio::spawn(BinanceBehavior::stream_trade(url));
         }
 
         // should we connect to the orderbook stream
-        if connections.orderbook {
+        /* 
+        if connections.orderbook.should_connect {
             tokio::spawn(BinanceBehavior::stream_orderbook(symbol.clone()));
         }
+        */
     }
 }
 
 impl BinanceBehavior {
     /// Start the trade stream
-    async fn stream_trade(symbol: Arc<String>) {
+    async fn stream_trade(url: String) {
         let keep_running = AtomicBool::new(true);
-        let url = format!("wss://stream.binance.com:9443/ws/{}@trade", symbol);
         let mut web_socket: WebSockets<'_, WebsocketEvent> = WebSockets::new(|event: WebsocketEvent| {
             //logger_tx.send(event.clone()).unwrap();
             match event {
+
                 WebsocketEvent::Trade(trade) => {
                     println!("Symbol: {}, price: {}, qty: {}", trade.symbol, trade.price, trade.qty);
                 }

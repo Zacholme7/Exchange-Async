@@ -17,12 +17,18 @@ pub struct ExchangeInformation {
         pub connections: WebsocketEndpoints,
 }
 
-/// Represents that endpoints that we would like to
-/// connect to for the specific excahnge
+/// Represents information regarding the endpoints that we want to connect to
 #[derive(Serialize, Deserialize, Debug, Clone)] 
 pub struct WebsocketEndpoints {
-        pub trade: bool,
-        pub orderbook: bool
+        pub trade: ConnectionInformation,
+        pub orderbook: ConnectionInformation,
+}
+
+/// Holds connection information for the endpoint that we want to connect to
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ConnectionInformation {
+        pub should_connect: bool,
+        pub symbols: Vec<String>,
 }
 
 /// Load the configuration file and turn it into a hashmap with all of our configuration variables
