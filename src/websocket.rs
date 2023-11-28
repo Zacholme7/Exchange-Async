@@ -9,8 +9,6 @@ use tokio_tungstenite::{connect_async, MaybeTlsStream};
 use url::Url;
 use crate::error::*;
 
-static WE_ENDPOINT: &str = "ws";
-
 /// Websocket struct representing a connection to an exchange
 pub struct WebSockets<'a, WE> {
     /// Websoccket connection
@@ -25,7 +23,6 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
     where
         Callback: FnMut(WE) -> Result<()> + 'a + Send,
     {
-        println!("creating the websocket");
         WebSockets {
             socket: None,
             handler: Box::new(handler),
@@ -34,16 +31,12 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
 
     /// Connect to a specified endpoint
     pub async fn connect(&mut self, url: String) -> Result<()> {
-        println!("connecting to the enpdoint");
         let url = Url::parse(&url)?;
         self.handle_connection(url).await
     }
 
-
     /// Helper function to do the actual connecting
     async fn handle_connection(&mut self, url: Url) -> Result<()> {
-        println!("{:?}", url);
-
         match connect_async(url).await {
             Ok(answer) => {
                 self.socket = Some(answer); 

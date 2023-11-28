@@ -1,39 +1,25 @@
 use exchange_async::load_config::{load_config, Exchanges};
 use exchange_async::exchange::Exchange;
-use std::thread;
-use futures::StreamExt;
-use exchange_async::websocket::WebSockets;
-use tokio_tungstenite::connect_async;
-use tokio_tungstenite::tungstenite::Message;
-use url::Url;
-use std::sync::Arc;
-use futures::future::join_all;
+use tokio::time::{sleep, Duration};
 use tokio;
-use futures::future::join;
 
 #[tokio::main]
 async fn main() {
-
     // Load configuration
     let config = load_config("src/config.json").unwrap();
 
-    let binance_config = config.binance.clone();
-
-    // Create a vector of exchanges wrapped in Arc
-    let exchanges: Vec<Arc<Exchange>> = vec![
-        Arc::new(Exchange::new(binance_config, Exchanges::Binance)),
+    // Create all of the exchanges
+    let exchanges: Vec<Exchange> = vec![
+        Exchange::new(Exchanges::Binance),
     ];
 
-    // Iterate over the exchanges
-    //let mut futures = Vec::new();
+    // Start the stream for each of the exchanges
     for exchange in exchanges {
-        let exchange_clone = exchange.clone();
-        exchange_clone.behavior.start_stream(&exchange_clone.exchange_information, "btcusdt".to_string()).await;
+        exchange.behavior.start_stream(&config.binance, "btcusdt".to_string()).await;
     }
 
-    while true {
-        continue;
+    // Spin loop
+    loop {
+        sleep(Duration::from_secs(1)).await;
     }
-    // Wait for all futures to complete
-    //join_all(futures).await;
 }

@@ -6,6 +6,7 @@ currently what to do
 - much better error handling
 - make the connections much more configurable
 - send the ping to keep it alive
+- make the symbols configuable, able to add more in the config
 
 possible additions
 ------------------

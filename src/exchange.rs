@@ -1,6 +1,5 @@
 use crate::load_config::{ExchangeInformation, Exchanges};
 use crate::Exchanges::Binance::behavior::BinanceBehavior;
-//use crate::Exchanges::Poloniex::behavior::PoloniexBehavior;
 use std::sync::Arc;
 use async_trait::async_trait;
 
@@ -14,23 +13,20 @@ pub trait ExchangeBehavior: Send + Sync {
 
 /// Structure representing an exchange
 pub struct Exchange {
-    pub exchange_information: ExchangeInformation,
+    /// The behavior that the exchange implements
     pub behavior: Arc<dyn ExchangeBehavior>
 }
 
 impl Exchange {
     /// Constructor for an exchange
-    pub fn new(exchange_information: ExchangeInformation, exchange_type: Exchanges) -> Self {
-        println!("creating the exchange");
+    pub fn new( exchange_type: Exchanges) -> Self {
         // Retrieve the correct behavior for the exchange
         let behavior: Arc<dyn ExchangeBehavior> = match exchange_type {
             Exchanges::Binance => Arc::new(BinanceBehavior),
             // Other exchanges...
         };
 
-        // Construct the instance
         Self {
-            exchange_information,
             behavior
         }
     }

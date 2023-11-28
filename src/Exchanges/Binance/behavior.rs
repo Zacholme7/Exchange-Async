@@ -1,21 +1,11 @@
 use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
-
 use crate::exchange::ExchangeBehavior;
 use crate::load_config::ExchangeInformation;
 use crate::ws_model::WebsocketEvent;
-
 use crate::websocket::WebSockets;
 use async_trait::async_trait;
 
-
-/// Websocket endpoint
-pub static WS_ENDPOINT: &str = "ws";
-
-/// Construct the aggregated stream endpoint
-pub fn agg_trade_stream(symbol: &str) -> String {
-    format!("{symbol}@aggTrade")
-}
 pub struct BinanceBehavior;
 
 #[async_trait]
@@ -41,7 +31,6 @@ impl ExchangeBehavior for BinanceBehavior {
 impl BinanceBehavior {
     /// Start the trade stream
     async fn stream_trade(symbol: Arc<String>) {
-        println!("starting the trade stream");
         let keep_running = AtomicBool::new(true);
         let url = format!("wss://stream.binance.com:9443/ws/{}@trade", symbol);
         let mut web_socket: WebSockets<'_, WebsocketEvent> = WebSockets::new(|event: WebsocketEvent| {
