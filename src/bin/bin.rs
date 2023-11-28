@@ -29,7 +29,6 @@ async fn main() {
     for exchange in exchanges {
         let exchange_clone = exchange.clone();
         exchange_clone.behavior.start_stream(&exchange_clone.exchange_information, "btcusdt".to_string()).await;
-        exchange_clone.behavior.start_stream(&exchange_clone.exchange_information, "ethusdt".to_string()).await;
     }
 
     while true {

@@ -1,0 +1,13 @@
+currently what to do
+-------------------
+- clean up code  
+- flesh out exchanges
+- make the rest api
+- much better error handling
+- make the connections much more configurable
+- send the ping to keep it alive
+
+possible additions
+------------------
+- make it be able to accept commands
+- upon disconnect make it be able to reconnect

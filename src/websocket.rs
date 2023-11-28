@@ -33,14 +33,9 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
     }
 
     /// Connect to a specified endpoint
-    pub async fn connect(&mut self, symbol: String) -> Result<()> {
+    pub async fn connect(&mut self, url: String) -> Result<()> {
         println!("connecting to the enpdoint");
-        //let wss: String = format!("{}/{}/{}", self.ws_endpoint, WS_ENDPOINT, endpoint);
-        //let wss = "wss://stream.binance.com:443/ws/btcusdt@trade";
-        let url = format!("wss://stream.binance.com:9443/ws/{}@trade", symbol);
         let url = Url::parse(&url)?;
-       // let wss = 
-        //let url = Url::parse(&wss)?;
         self.handle_connection(url).await
     }
 
