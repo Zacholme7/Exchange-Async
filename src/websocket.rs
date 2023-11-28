@@ -9,42 +9,50 @@ use tokio_tungstenite::{connect_async, MaybeTlsStream};
 use url::Url;
 use crate::error::*;
 
+static WE_ENDPOINT: &str = "ws";
+
 /// Websocket struct representing a connection to an exchange
 pub struct WebSockets<'a, WE> {
     /// Websoccket connection
     pub socket: Option<(WebSocketStream<MaybeTlsStream<TcpStream>>, Response)>,
-    /// Callback function to handle incomming messages
+    // Callback function to handle incomming messages
     handler: Box<dyn FnMut(WE) -> Result<()> + 'a + Send>,
-    /// Websocket url
-    ws_endpoint: &'a str,
 }
 
 impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
     /// Constructor to create a new websocket
-    pub fn new<Callback>(handler: Callback, ws_endpoint: &str) -> WebSockets<'a, WE>
+    pub fn new<Callback>(handler: Callback) -> WebSockets<'a, WE>
     where
         Callback: FnMut(WE) -> Result<()> + 'a + Send,
     {
+        println!("creating the websocket");
         WebSockets {
             socket: None,
             handler: Box::new(handler),
-            ws_endpoint: ws_endpoint,
         }
     }
 
     /// Connect to a specified endpoint
-    pub async fn connect(&mut self, endpoint: &str) -> Result<()> {
-        let wss: String = format!("{}/{}/{}", self.ws_endpoint, WS_ENDPOINT, endpoint);
-        let url = Url::parse(&wss)?;
+    pub async fn connect(&mut self, symbol: String) -> Result<()> {
+        println!("connecting to the enpdoint");
+        //let wss: String = format!("{}/{}/{}", self.ws_endpoint, WS_ENDPOINT, endpoint);
+        //let wss = "wss://stream.binance.com:443/ws/btcusdt@trade";
+        let url = format!("wss://stream.binance.com:9443/ws/{}@trade", symbol);
+        let url = Url::parse(&url)?;
+       // let wss = 
+        //let url = Url::parse(&wss)?;
         self.handle_connection(url).await
     }
 
 
     /// Helper function to do the actual connecting
     async fn handle_connection(&mut self, url: Url) -> Result<()> {
+        println!("{:?}", url);
+
         match connect_async(url).await {
             Ok(answer) => {
                 self.socket = Some(answer); 
+                println!("connected");
                 Ok(())
             }
             Err(e) => Err(Error::Msg(format!("Error during handshake {e}")))
@@ -61,7 +69,7 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
         }
     }
 
-    /// Event loop that will recieve the incomming messages and utilize the callback to parse them
+    // Event loop that will recieve the incomming messages and utilize the callback to parse them
     pub async fn event_loop(&mut self, running: &AtomicBool) -> Result<()> {
         while running.load(Ordering::Relaxed) {
             if let Some((ref mut socket, _)) = self.socket {

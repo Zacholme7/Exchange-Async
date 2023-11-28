@@ -1,38 +1,40 @@
 use exchange_async::load_config::{load_config, Exchanges};
 use exchange_async::exchange::Exchange;
-
+use std::thread;
+use futures::StreamExt;
+use exchange_async::websocket::WebSockets;
+use tokio_tungstenite::connect_async;
+use tokio_tungstenite::tungstenite::Message;
+use url::Url;
+use std::sync::Arc;
+use futures::future::join_all;
 use tokio;
-
+use futures::future::join;
 
 #[tokio::main]
 async fn main() {
-    // read in all of the configuration information
+
+    // Load configuration
     let config = load_config("src/config.json").unwrap();
 
-    // vector that will hold the exchanges
-    let exchanges: Vec<Exchange> = vec![
-        Exchange::new(&config.binance, Exchanges::Binance),
-        //Exchange::new(config.poloniex, Exchanges::Poloniex)
+    let binance_config = config.binance.clone();
+
+    // Create a vector of exchanges wrapped in Arc
+    let exchanges: Vec<Arc<Exchange>> = vec![
+        Arc::new(Exchange::new(binance_config, Exchanges::Binance)),
     ];
 
+    // Iterate over the exchanges
+    //let mut futures = Vec::new();
     for exchange in exchanges {
-        /* 
-        tokio::spawn(async move {
-            exchange.behavior.start_stream(&config.binance).await;
-        });
-        */
-        //exchange.behavior.start_stream();
-        // start each of these in their own thread????
-        // something liek std::thread(exchange.start_stream())
-        // start stream will then call tokio::spawn
+        let exchange_clone = exchange.clone();
+        exchange_clone.behavior.start_stream(&exchange_clone.exchange_information, "btcusdt".to_string()).await;
+        exchange_clone.behavior.start_stream(&exchange_clone.exchange_information, "ethusdt".to_string()).await;
     }
 
-    // main funciton can then poll, restart connecions, etc
+    while true {
+        continue;
+    }
+    // Wait for all futures to complete
+    //join_all(futures).await;
 }
-
-
-
-
-
-
-

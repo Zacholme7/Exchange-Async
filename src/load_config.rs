@@ -3,17 +3,15 @@ use std::{fs::File, io::Read, path::Path};
 
 /// Represents a configuration for an exchange 
 /// as defined in config.json
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExchangeConfig {
         pub binance: ExchangeInformation,
         pub poloniex: ExchangeInformation,
 }
 
 /// The configuation information for each exchange
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExchangeInformation {
-        pub websocket_url: String,
-        pub rest_url: String,
         pub public_key: String,
         pub private_key: String,
         pub connections: WebsocketEndpoints,
@@ -21,7 +19,7 @@ pub struct ExchangeInformation {
 
 /// Represents that endpoints that we would like to
 /// connect to for the specific excahnge
-#[derive(Serialize, Deserialize, Debug)] 
+#[derive(Serialize, Deserialize, Debug, Clone)] 
 pub struct WebsocketEndpoints {
         pub trade: bool,
         pub orderbook: bool

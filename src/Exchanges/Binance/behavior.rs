@@ -1,6 +1,11 @@
-use async_trait::async_trait;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
+
 use crate::exchange::ExchangeBehavior;
-use crate::load_config::*;
+use crate::load_config::ExchangeInformation;
+use crate::ws_model::WebsocketEvent;
+use crate::websocket::WebSockets;
+use async_trait::async_trait;
 
 
 /// Websocket endpoint
@@ -14,36 +19,41 @@ pub struct BinanceBehavior;
 
 #[async_trait]
 impl ExchangeBehavior for BinanceBehavior {
-        fn stream_trade(&self) {
-                let agg_trade: String = agg_trade_stream("ethbtc");
+    /// Start the stream for every endpoint that we would like to connec tto
+    async fn start_stream(&self, exchange_information: &ExchangeInformation, symbol: String) {
+        let connections = &exchange_information.connections;
+        println!("starting the stream");
+        if connections.trade {
+            tokio::spawn(BinanceBehavior::stream_trade(symbol));
+        }
+    }
 
-                let mut web_socket: WebSockets<'_, WebsocketEvent> = WebSockets::new(|event: WebsocketEvent| {
-                    logger_tx.send(event.clone()).unwrap();
-                    match event {
-                        WebsocketEvent::Trade(trade) => {
-                            println!("Symbol: {}, price: {}, qty: {}", trade.symbol, trade.price, trade.qty);
-                        }
-                        WebsocketEvent::DepthOrderBook(depth_order_book) => {
-                            println!(
-                                "Symbol: {}, Bids: {:?}, Ask: {:?}",
-                                depth_order_book.symbol, depth_order_book.bids, depth_order_book.asks
-                            );
-                        }
-                        _ => (),
-                    };
-            
-                    Ok(())
-                });
-            
-                web_socket.connect(&agg_trade).await.unwrap(); // check error
-                if let Err(e) = web_socket.event_loop(&keep_running).await {
-                    println!("Error: {e}");
+}
+
+impl BinanceBehavior {
+    /// Start the trade stream
+    async fn stream_trade(symbol: String) {
+        println!("starting the trade stream");
+        let keep_running = AtomicBool::new(true);
+        let agg_trade: String = agg_trade_stream("ethbtc");
+        let mut web_socket: WebSockets<'_, WebsocketEvent> = WebSockets::new(|event: WebsocketEvent| {
+            //logger_tx.send(event.clone()).unwrap();
+            match event {
+                WebsocketEvent::Trade(trade) => {
+                    println!("Symbol: {}, price: {}, qty: {}", trade.symbol, trade.price, trade.qty);
                 }
-                web_socket.disconnect().await.unwrap();
-                println!("disconnected");
-        }
+                _ => (),
+            };
+    
+            Ok(())
+        });
+    
 
-        fn stream_orderbook(&self) {
-                todo!()
+        web_socket.connect(symbol).await.unwrap(); // check error
+        if let Err(e) = web_socket.event_loop(&keep_running).await {
+            println!("Error: {e}");
         }
+        web_socket.disconnect().await.unwrap();
+        println!("disconnected");
+    }
 }

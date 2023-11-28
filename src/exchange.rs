@@ -1,49 +1,31 @@
 use crate::load_config::{ExchangeInformation, Exchanges};
 use crate::Exchanges::Binance::behavior::BinanceBehavior;
 //use crate::Exchanges::Poloniex::behavior::PoloniexBehavior;
+use std::sync::Arc;
 use async_trait::async_trait;
 
 /// Common trait that all exchanges should implement
 /// Defines the processing behavior for the specific exchange
 #[async_trait]
-pub trait ExchangeBehavior {
+pub trait ExchangeBehavior: Send + Sync {
     /// Start the stream for every endpoint that we would like to connect to 
-    async fn start_stream(&self, exchange_information: &ExchangeInformation) {
-        // From the config, get what endpoints we should connect to
-        let connections = &exchange_information.connections;
-
-        // Connect to the trade endpoint
-        if connections.trade {
-            tokio::spawn(
-                self.stream_trade()
-            );
-        }
-
-        // Connect to the orderbook stream
-        if connections.orderbook {
-            self.stream_orderbook();
-        }
-    }
-    /// Connect to a trade stream
-    fn stream_trade(&self);
-    /// Connect to the orderbook stream
-    fn stream_orderbook(&self);
+    async fn start_stream(&self, exchange_information: &ExchangeInformation, symbol: String);
 }
 
 /// Structure representing an exchange
-pub struct Exchange<'a> {
-    /// Configuration information about the exchange
-    pub exchange_information: &'a ExchangeInformation,
-    pub behavior: Box<dyn ExchangeBehavior>
+pub struct Exchange {
+    pub exchange_information: ExchangeInformation,
+    pub behavior: Arc<dyn ExchangeBehavior>
 }
 
-impl<'a> Exchange<'a> {
+impl Exchange {
     /// Constructor for an exchange
-    pub fn new(exchange_information: &'a ExchangeInformation, exchange_type: Exchanges) -> Self {
+    pub fn new(exchange_information: ExchangeInformation, exchange_type: Exchanges) -> Self {
+        println!("creating the exchange");
         // Retrieve the correct behavior for the exchange
-        let behavior: Box<dyn ExchangeBehavior> = match exchange_type {
-            Exchanges::Binance => Box::new(BinanceBehavior),
-            //Exchanges::Poloniex => Box::new(PoloniexBehavior),
+        let behavior: Arc<dyn ExchangeBehavior> = match exchange_type {
+            Exchanges::Binance => Arc::new(BinanceBehavior),
+            // Other exchanges...
         };
 
         // Construct the instance
