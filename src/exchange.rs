@@ -8,7 +8,7 @@ use async_trait::async_trait;
 #[async_trait]
 pub trait ExchangeBehavior: Send + Sync {
     /// Start the stream for every endpoint that we would like to connect to 
-    async fn start_stream(&self, exchange_information: &ExchangeInformation, symbol: String);
+    async fn start_stream(&self, exchange_information: &ExchangeInformation);
 }
 
 /// Structure representing an exchange

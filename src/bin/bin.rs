@@ -15,7 +15,7 @@ async fn main() {
 
     // Start the stream for each of the exchanges
     for exchange in exchanges {
-        exchange.behavior.start_stream(&config.binance, "btcusdt".to_string()).await;
+        exchange.behavior.start_stream(&config.binance).await;
     }
 
     // Spin loop
