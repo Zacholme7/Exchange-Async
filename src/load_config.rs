@@ -7,6 +7,7 @@ use std::{fs::File, io::Read, path::Path};
 pub struct ExchangeConfig {
         pub binance: ExchangeInformation,
         pub poloniex: ExchangeInformation,
+        pub hyperliquid: ExchangeInformation,
 }
 
 /// The configuation information for each exchange
@@ -43,6 +44,7 @@ pub fn load_config<P: AsRef<Path>>(path: P) -> Result<ExchangeConfig, Box<dyn st
 /// Represents the exchanges that we have added
 pub enum Exchanges {
         Binance,
+        Hyperliquid
         //Poloniex,
 }
 

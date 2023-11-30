@@ -1,14 +1,14 @@
 use tokio::net::TcpStream;
 use std::sync::atomic::{AtomicBool, Ordering};
 use futures::StreamExt;
-use serde_json::from_str;
+use serde_json::{from_str, json};
 use tokio_tungstenite::tungstenite::handshake::client::Response;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
 use tokio_tungstenite::{connect_async, MaybeTlsStream};
 use url::Url;
 use crate::error::*;
-
+use futures::SinkExt;
 /// Websocket struct representing a connection to an exchange
 pub struct WebSockets<'a, WE> {
     /// Websoccket connection
@@ -33,6 +33,17 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
     pub async fn connect(&mut self, url: String) -> Result<()> {
         let url = Url::parse(&url)?;
         self.handle_connection(url).await
+    }
+
+    // Function to send a subscription message to websocket
+    pub async fn subscribe(&mut self, subscription_message: String) -> Result<()> {
+        println!("sendign subscription message");
+        if let Some((ref mut socket, _)) = self.socket {
+            socket.send(Message::Text(subscription_message)).await?;
+            Ok(())
+        } else {
+            Err(Error::Msg("WebSocket is not connected".to_string()))
+        }
     }
 
     /// Helper function to do the actual connecting

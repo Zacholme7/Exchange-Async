@@ -1,8 +1,9 @@
 use crate::load_config::{ExchangeInformation, Exchanges};
 use crate::Exchanges::Binance::behavior::BinanceBehavior;
+use crate::Exchanges::Hyperliquid::behavior::HyperliquidBehavior;
 use std::sync::Arc;
 use async_trait::async_trait;
-
+static ORDERBOOK_STREAM: &str = "@depth";
 /// Common trait that all exchanges should implement
 /// Defines the processing behavior for the specific exchange
 #[async_trait]
@@ -23,6 +24,7 @@ impl Exchange {
         // Retrieve the correct behavior for the exchange
         let behavior: Arc<dyn ExchangeBehavior> = match exchange_type {
             Exchanges::Binance => Arc::new(BinanceBehavior),
+            Exchanges::Hyperliquid => Arc::new(HyperliquidBehavior),
             // Other exchanges...
         };
 

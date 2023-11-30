@@ -1,12 +1,8 @@
 currently what to do
 -------------------
-- clean up code  
-- flesh out exchanges
-- make the rest api
-- much better error handling
-- make the connections much more configurable
 - send the ping to keep it alive
 - make the symbols configuable, able to add more in the config
+- add the subscriptoin mechanism
 
 possible additions
 ------------------

@@ -3,6 +3,8 @@ use exchange_async::exchange::Exchange;
 use tokio::time::{sleep, Duration};
 use tokio;
 
+
+
 #[tokio::main]
 async fn main() {
     // Load configuration
@@ -10,12 +12,14 @@ async fn main() {
 
     // Create all of the exchanges
     let exchanges: Vec<Exchange> = vec![
-        Exchange::new(Exchanges::Binance),
+        //Exchange::new(Exchanges::Binance),
+        Exchange::new(Exchanges::Hyperliquid),
     ];
 
     // Start the stream for each of the exchanges
     for exchange in exchanges {
-        exchange.behavior.start_stream(&config.binance).await;
+        //exchange.behavior.start_stream(&config.binance).await;
+        exchange.behavior.start_stream(&config.hyperliquid).await;
     }
 
     // Spin loop
