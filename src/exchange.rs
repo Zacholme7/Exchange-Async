@@ -1,9 +1,9 @@
 use crate::load_config::{ExchangeInformation, Exchanges};
-use crate::Exchanges::Binance::behavior::BinanceBehavior;
-use crate::Exchanges::Hyperliquid::behavior::HyperliquidBehavior;
+use crate::exchanges::cex::binance::behavior::BinanceBehavior;
+use crate::exchanges::dex::hyperliquid::behavior::HyperliquidBehavior;
 use std::sync::Arc;
 use async_trait::async_trait;
-static ORDERBOOK_STREAM: &str = "@depth";
+
 /// Common trait that all exchanges should implement
 /// Defines the processing behavior for the specific exchange
 #[async_trait]

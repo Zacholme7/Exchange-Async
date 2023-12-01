@@ -1,8 +1,7 @@
-use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use crate::exchange::ExchangeBehavior;
 use crate::load_config::ExchangeInformation;
-use crate::ws_model::WebsocketEvent;
+use crate::exchanges::cex::binance::data_models::*;
 use crate::websocket::WebSockets;
 use async_trait::async_trait;
 
@@ -47,27 +46,19 @@ impl BinanceBehavior {
 
     /// Start the trade stream
     async fn stream_trade(url: String) {
-        println!("Connecting to trade stream");
-        let keep_running = AtomicBool::new(true);
         let mut web_socket: WebSockets<'_, WebsocketEvent> = WebSockets::new(|event: WebsocketEvent| {
             //logger_tx.send(event.clone()).unwrap();
             match event {
-
                 WebsocketEvent::Trade(trade) => {
                     println!("Symbol: {}, price: {}, qty: {}", trade.symbol, trade.price, trade.qty);
                 }
                 _ => (),
             };
-    
             Ok(())
         });
-        web_socket.connect(url).await.unwrap(); // check error
-        if let Err(e) = web_socket.event_loop(&keep_running).await {
-            println!("Error: {e}");
-        }
-        web_socket.disconnect().await.unwrap();
-        println!("disconnected");
-    }
+
+        web_socket.connect_and_stream(url).await;
+     }
 
     /// Start the orderbook stream
     async fn stream_orderbook(url: String) {
@@ -88,12 +79,7 @@ impl BinanceBehavior {
             Ok(())
         });
     
-        web_socket.connect(url).await.unwrap(); // check error
-        if let Err(e) = web_socket.event_loop(&keep_running).await {
-            println!("Error: {e}");
-        }
-        web_socket.disconnect().await.unwrap();
-        println!("disconnected");
+        web_socket.connect_and_stream(url).await;
     }
 }
 

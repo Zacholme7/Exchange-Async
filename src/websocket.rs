@@ -1,14 +1,16 @@
 use tokio::net::TcpStream;
 use std::sync::atomic::{AtomicBool, Ordering};
-use futures::StreamExt;
-use serde_json::{from_str, json};
-use tokio_tungstenite::tungstenite::handshake::client::Response;
-use tokio_tungstenite::tungstenite::Message;
-use tokio_tungstenite::WebSocketStream;
-use tokio_tungstenite::{connect_async, MaybeTlsStream};
+use futures::{StreamExt, SinkExt};
+use serde_json::from_str;
+use tokio_tungstenite::tungstenite::{
+        handshake::client::Response,
+        Message
+    };
+use tokio_tungstenite::{connect_async, MaybeTlsStream, WebSocketStream};
 use url::Url;
+
 use crate::error::*;
-use futures::SinkExt;
+
 /// Websocket struct representing a connection to an exchange
 pub struct WebSockets<'a, WE> {
     /// Websoccket connection
@@ -29,14 +31,49 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
         }
     }
 
-    /// Connect to a specified endpoint
-    pub async fn connect(&mut self, url: String) -> Result<()> {
+    /// Function to connect to the websocket and process messages
+    pub async fn connect_and_stream(&mut self, url: String) {
+        let keep_running = AtomicBool::new(true);
+        // connect to the url
+        self.connect(url).await.unwrap();
+
+        // start the event loop
+        if let Err(e) = self.event_loop(&keep_running).await {
+            println!("Error: {e}");
+        }
+
+        // once done, disconnect
+        self.disconnect().await.unwrap();
+    }
+
+    /// Function to connect to the websocket, subscribe to a stream, and process messages
+    pub async fn connect_subscribe_and_stream(&mut self, url: String, subscription_message: String) {
+        let keep_running = AtomicBool::new(true);
+        // connect to the url
+        self.connect(url).await.unwrap();
+
+        // subscribe to a stream
+        self.subscribe(subscription_message).await.unwrap();
+
+        // start the event loop
+        // start the event loop
+        if let Err(e) = self.event_loop(&keep_running).await {
+            println!("Error: {e}");
+        }
+
+        // once done, disconnect
+        self.disconnect().await.unwrap();
+    }
+
+
+    /// Function to connect to a websocket url
+    async fn connect(&mut self, url: String) -> Result<()> {
         let url = Url::parse(&url)?;
         self.handle_connection(url).await
     }
 
     // Function to send a subscription message to websocket
-    pub async fn subscribe(&mut self, subscription_message: String) -> Result<()> {
+    async fn subscribe(&mut self, subscription_message: String) -> Result<()> {
         println!("sendign subscription message");
         if let Some((ref mut socket, _)) = self.socket {
             socket.send(Message::Text(subscription_message)).await?;
@@ -78,6 +115,7 @@ impl<'a, WE: serde::de::DeserializeOwned> WebSockets<'a, WE> {
                         if msg.is_empty() {
                             return Ok(());
                         }
+                        println!("{:?}", msg);
                         let event: WE = from_str(msg.as_str())?;
                         (self.handler)(event)?; // process the message with our callback function
                     }
